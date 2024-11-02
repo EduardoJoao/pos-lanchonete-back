@@ -1,0 +1,284 @@
+openapi: 3.0.0
+info:
+  title: Fast Food Ordering System
+  version: 1.0.0
+  description: API para gerenciamento de pedidos, clientes e produtos de uma lanchonete de fast food.
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor local
+
+paths:
+  /clientes:
+    post:
+      summary: Cadastro de um novo cliente
+      tags:
+        - Cliente
+      requestBody:
+        description: Dados do cliente
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cliente'
+      responses:
+        '201':
+          description: Cliente criado com sucesso
+    get:
+      summary: Listar todos os clientes
+      tags:
+        - Cliente
+      responses:
+        '200':
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cliente'
+  /clientes/{cpf}:
+    get:
+      summary: Identificar cliente pelo CPF
+      tags:
+        - Cliente
+      parameters:
+        - in: path
+          name: cpf
+          schema:
+            type: string
+          required: true
+          description: CPF do cliente
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+  /produtos:
+    post:
+      summary: Criar um novo produto
+      tags:
+        - Produto
+      requestBody:
+        description: Dados do produto
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Produto'
+      responses:
+        '201':
+          description: Produto criado com sucesso
+    get:
+      summary: Listar produtos por categoria
+      tags:
+        - Produto
+      parameters:
+        - in: query
+          name: categoria
+          schema:
+            $ref: '#/components/schemas/CategoriaProduto'
+          required: true
+          description: Categoria do produto (e.g., Lanche, Acompanhamento, Bebida, Sobremesa)
+      responses:
+        '200':
+          description: Lista de produtos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Produto'
+  /produtos/{id}:
+    put:
+      summary: Editar um produto existente
+      tags:
+        - Produto
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        description: Dados atualizados do produto
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Produto'
+      responses:
+        '200':
+          description: Produto atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produto'
+    delete:
+      summary: Remover um produto
+      tags:
+        - Produto
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Produto removido com sucesso
+  /pedidos:
+    post:
+      summary: Criar um pedido
+      tags:
+        - Pedido
+      requestBody:
+        description: Dados do pedido
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarPedidoRequest'
+      responses:
+        '201':
+          description: Pedido criado com sucesso
+    get:
+      summary: Listar todos os pedidos
+      tags:
+        - Pedido
+      responses:
+        '200':
+          description: Lista de pedidos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pedido'
+
+  /pagamento/{id}:
+    post:
+      summary: Atualizar Status pedido
+      tags:
+        - Pedido
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Pagamento efetuado com sucesso
+
+components:
+  parameters:
+    id:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        format: int64
+    id_pedido:
+      in: header
+      name: id_pedido
+      required: true
+      schema:
+        type: integer
+        format: int64
+  schemas:
+    Cliente:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        nome:
+          type: string
+          example: João Silva
+        email:
+          type: string
+          example: joao.silva@email.com
+        cpf:
+          type: string
+          example: "12345678901"
+
+    Produto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 101
+        nome:
+          type: string
+          example: Hambúrguer
+        descricao:
+          type: string
+          example: Hambúrguer artesanal com queijo, alface e tomate
+        preco:
+          type: number
+          format: double
+          example: 15.99
+        categoria:
+          $ref: '#/components/schemas/CategoriaProduto'
+
+    CriarPedidoRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 202
+        cpf:
+          type: string
+        produtos:
+          type: array
+          items:
+            type: integer
+            format: int64
+            example: 202
+        status:
+          type: string
+          enum: [Criado, Confirmado, Em preparacao, Pronto, Finalizado]
+          example: Recebido
+        total:
+          type: number
+          format: double
+          example: 29.99
+
+    Pedido:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 202
+        cliente:
+          $ref: '#/components/schemas/Cliente'
+        produtos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Produto'
+        statusPedido:
+          $ref: '#/components/schemas/StatusPedidoEnum'
+        statusPagamento:
+          $ref: '#/components/schemas/StatusPagamentoEnum'
+        total:
+          type: number
+          format: double
+          example: 29.99
+
+    CategoriaProduto:
+      enum:
+        - TODOS
+        - LANCHE
+        - ACOMPANHAMENTO
+        - BEBIDA
+        - SOBREMESA
+
+    StatusPedidoEnum:
+      enum:
+        - CRIADO
+        - CONFIRMADO
+        - EM_PREPARACAO
+        - PRONTO
+        - FINALIZADO
+
+    StatusPagamentoEnum:
+      enum:
+        - PENDENTE
+        - APROVADO
+        - RECUSADO

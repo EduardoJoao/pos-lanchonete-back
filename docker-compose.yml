@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:latest
+    volumes:
+      - ./01-base-lanchonete.sql:/docker-entrypoint-initdb.d/01-base-lanchonete.sql
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "123456"
+      POSTGRES_DB: "lanchonete"
+    ports:
+      - "5432:5432"
+
+  backend:
+    image: lanchonete-1:latest
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: 123456
+      DB_NAME: lanchonete
+    ports:
+      - "8080:8080"
+    command: ["java", "-jar", "/app/app.jar"]  # Ajuste se necessário, conforme o Dockerfile
